@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: task-manager-backend
+    env: java
+    planId: free
+    repo: https://github.com/gowthaman240116-ai/task_management-.git
+    branch: main
+    rootDir: backend
+    buildCommand: mvn clean package -DskipTests
+    startCommand: java -jar target/demo-0.0.1-SNAPSHOT.jar
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+    autoDeploy: true
+    
+  - type: web
+    name: task-manager-frontend
+    env: node
+    planId: free
+    repo: https://github.com/gowthaman240116-ai/task_management-.git
+    branch: main
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+    autoDeploy: true
