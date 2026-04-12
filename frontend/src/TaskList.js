@@ -1,28 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { fetchTasks, updateTask, deleteTask } from './api';
+import React from 'react';
+import { updateTask, deleteTask } from './api';
 
-function TaskList() {
-  const [tasks, setTasks] = useState([]);
-
-  useEffect(() => {
-    const loadTasks = async () => {
-      try {
-        const fetchedTasks = await fetchTasks();
-        setTasks(fetchedTasks);
-      } catch (error) {
-        console.error('Error loading tasks:', error);
-      }
-    };
-    
-    loadTasks();
-  }, []);
-
-  const handleStatusChange = (task, newStatus) => {
+function TaskList({ tasks, onUpdate, onDelete }) {
+  const handleStatusChange = async (task, newStatus) => {
     const updatedTask = { ...task, status: newStatus };
     try {
-      updateTask(task.id, updatedTask).then(() => {
-        setTasks(tasks.map(t => t.id === task.id ? updatedTask : t));
-      });
+      await updateTask(task.id, updatedTask);
+      onUpdate(task.id, updatedTask);
     } catch (error) {
       console.error('Error updating task:', error);
     }
@@ -31,7 +15,7 @@ function TaskList() {
   const handleDelete = async (taskId) => {
     try {
       await deleteTask(taskId);
-      setTasks(tasks.filter(task => task.id !== taskId));
+      onDelete(taskId);
     } catch (error) {
       console.error('Error deleting task:', error);
     }

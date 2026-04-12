@@ -1,9 +1,15 @@
 // API utility functions with Firebase
-const API_BASE_URL = 'https://task-manager-app-ace32-default-rtdb.firebaseio.com/tasks.json';
+const API_BASE_URL = 'https://task-manager-app-ace32-default-rtdb.firebaseio.com/tasks';
+
+const normalizeTasks = (data) => {
+  if (!data) return [];
+  return Object.entries(data).map(([id, task]) => ({ id, ...task }));
+};
 
 export const fetchTasks = async () => {
-  const response = await fetch(API_BASE_URL);
-  return response.json();
+  const response = await fetch(`${API_BASE_URL}.json`);
+  const data = await response.json();
+  return normalizeTasks(data);
 };
 
 export const addTask = async (task) => {
