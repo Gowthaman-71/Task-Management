@@ -37,3 +37,14 @@ coverage/
 # Temporary folders
 tmp/
 temp/
+
+# Secrets and credentials
+serviceAccountKey.json
+.env
+.env.*.local
+
+# Build outputs
+*/target/
+*/build/
+*.jar
+.m2/
