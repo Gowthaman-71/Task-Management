@@ -1,8 +1,40 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { fetchTasks, updateTask, deleteTask } from './api';
 
-function TaskList({ tasks, onUpdate, onDelete }) {
+function TaskList() {
+  const [tasks, setTasks] = useState([]);
+
+  useEffect(() => {
+    const loadTasks = async () => {
+      try {
+        const fetchedTasks = await fetchTasks();
+        setTasks(fetchedTasks);
+      } catch (error) {
+        console.error('Error loading tasks:', error);
+      }
+    };
+    
+    loadTasks();
+  }, []);
+
   const handleStatusChange = (task, newStatus) => {
-    onUpdate(task.id, { ...task, status: newStatus });
+    const updatedTask = { ...task, status: newStatus };
+    try {
+      updateTask(task.id, updatedTask).then(() => {
+        setTasks(tasks.map(t => t.id === task.id ? updatedTask : t));
+      });
+    } catch (error) {
+      console.error('Error updating task:', error);
+    }
+  };
+
+  const handleDelete = async (taskId) => {
+    try {
+      await deleteTask(taskId);
+      setTasks(tasks.filter(task => task.id !== taskId));
+    } catch (error) {
+      console.error('Error deleting task:', error);
+    }
   };
 
   const getPriorityClass = (priority) => {
@@ -67,7 +99,7 @@ function TaskList({ tasks, onUpdate, onDelete }) {
             <button className="btn-edit">Edit</button>
             <button 
               className="btn-delete" 
-              onClick={() => onDelete(task.id)}
+              onClick={() => handleDelete(task.id)}
             >
               Delete
             </button>

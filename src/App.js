@@ -33,7 +33,8 @@ function App() {
 
   const handleUpdateTask = async (id, updatedTask) => {
     try {
-      await updateTask(id, updatedTask);
+      const taskRef = doc(db, 'tasks', id);
+      await updateDoc(taskRef, updatedTask);
       loadTasks();
     } catch (error) {
       console.error('Error updating task:', error);
@@ -42,7 +43,8 @@ function App() {
 
   const handleDeleteTask = async (id) => {
     try {
-      await deleteTask(id);
+      const taskRef = doc(db, 'tasks', id);
+      await deleteDoc(taskRef);
       loadTasks();
     } catch (error) {
       console.error('Error deleting task:', error);

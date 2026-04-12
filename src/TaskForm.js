@@ -1,14 +1,26 @@
 import React, { useState } from 'react';
+import { addTask } from './api';
 
 function TaskForm({ onAdd }) {
   const [title, setTitle] = useState('');
   const [assignee, setAssignee] = useState('');
   const [priority, setPriority] = useState('Medium');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (title && assignee) {
-      onAdd({ title, assignee, priority, status: 'todo' });
+      const newTask = {
+        title,
+        assignee,
+        priority,
+        status: 'todo',
+        createdAt: new Date().toISOString(),
+        id: Date.now().toString()
+      };
+      
+      await addTask(newTask);
+      onAdd(newTask);
+      
       setTitle('');
       setAssignee('');
       setPriority('Medium');

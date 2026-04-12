@@ -1,5 +1,5 @@
-// API utility functions
-const API_BASE_URL = 'http://localhost:8080/tasks';
+// API utility functions with Firebase
+const API_BASE_URL = 'https://your-firebase-project.firebaseio.com/tasks.json';
 
 export const fetchTasks = async () => {
   const response = await fetch(API_BASE_URL);
@@ -7,16 +7,8 @@ export const fetchTasks = async () => {
 };
 
 export const addTask = async (task) => {
-  const response = await fetch(API_BASE_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(task)
-  });
-  return response.json();
-};
-
-export const updateTask = async (id, task) => {
-  const response = await fetch(`${API_BASE_URL}/${id}`, {
+  const taskId = Date.now().toString();
+  const response = await fetch(`${API_BASE_URL}/${taskId}.json`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(task)
@@ -24,6 +16,18 @@ export const updateTask = async (id, task) => {
   return response.json();
 };
 
+export const updateTask = async (id, task) => {
+  const response = await fetch(`${API_BASE_URL}/${id}.json`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(task)
+  });
+  return response.json();
+};
+
 export const deleteTask = async (id) => {
-  await fetch(`${API_BASE_URL}/${id}`, { method: 'DELETE' });
+  const response = await fetch(`${API_BASE_URL}/${id}.json`, { 
+    method: 'DELETE' 
+  });
+  return response.json();
 };
