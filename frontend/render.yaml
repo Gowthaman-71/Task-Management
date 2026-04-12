@@ -1,34 +1,12 @@
 services:
   # Type of service
   type: web
-  
+
   # Name of your service
   name: task-manager-frontend
-  
-  # Runtime
-  runtime: node
-  
-  # Build configuration
-  buildCommand: npm run build
-  
-  # Start command (for development)
-  startCommand: npm start
-  
-  # Environment variables
-  env:
-    - key: NODE_ENV
-      value: production
-  
+
+  # Runtime - using Docker
+  env: docker
+
   # Auto-deployment
   autoDeploy: true
-  
-  # Health check path
-  healthCheckPath: /
-  
-  # Build configuration
-  buildFilter:
-    paths:
-      - build/**
-  
-  # Publish directory
-  publishPath: build
