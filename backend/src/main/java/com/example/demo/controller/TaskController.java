@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/tasks")
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173", "https://task-manager-frontend.onrender.com"})
+@RequestMapping("/tasks")
+@CrossOrigin(origins = "http://localhost:3000")
 public class TaskController {
 
     @Autowired
