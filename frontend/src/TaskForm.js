@@ -1,29 +1,32 @@
 import React, { useState } from 'react';
-import { addTask } from './api';
 
 function TaskForm({ onAdd }) {
   const [title, setTitle] = useState('');
   const [assignee, setAssignee] = useState('');
   const [priority, setPriority] = useState('Medium');
+  const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (title && assignee) {
-      const newTask = {
-        title,
-        assignee,
-        priority,
-        status: 'todo',
-        createdAt: new Date().toISOString(),
-        id: Date.now().toString()
-      };
-      
-      await addTask(newTask);
-      onAdd(newTask);
-      
+    if (!title.trim() || !assignee.trim() || submitting) return;
+
+    const newTask = {
+      title,
+      assignee,
+      priority,
+      status: 'todo',
+      createdAt: new Date().toISOString(),
+      id: Date.now().toString()
+    };
+
+    setSubmitting(true);
+    try {
+      await onAdd(newTask);
       setTitle('');
       setAssignee('');
       setPriority('Medium');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -54,7 +57,9 @@ function TaskForm({ onAdd }) {
           <option value="High">High priority</option>
         </select>
       </div>
-      <button type="submit" className="add-task-btn">Add Task</button>
+      <button type="submit" className="add-task-btn" disabled={submitting}>
+        {submitting ? 'Adding…' : 'Add Task'}
+      </button>
     </form>
   );
 }
