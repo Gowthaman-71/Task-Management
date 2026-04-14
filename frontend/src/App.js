@@ -24,7 +24,6 @@ function App() {
 
   const handleAddTask = async (task) => {
     try {
-      await addTask(task);
       loadTasks();
     } catch (error) {
       console.error('Error adding task:', error);
