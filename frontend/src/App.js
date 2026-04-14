@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import TaskForm from './TaskForm';
 import TaskList from './TaskList';
 import { fetchTasks, addTask, updateTask, deleteTask } from './api';
+import { onValue, ref } from 'firebase/database';
+import { db } from './firebase';
 import './App.css';
 
 function App() {
@@ -10,22 +12,18 @@ function App() {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    loadTasks();
+    const tasksRef = ref(db, 'tasks');
+    const unsubscribe = onValue(tasksRef, (snapshot) => {
+      const data = snapshot.val();
+      const tasksArray = data ? Object.entries(data).map(([id, task]) => ({ id, ...task })) : [];
+      setTasks(tasksArray);
+    });
+    return () => unsubscribe();
   }, []);
-
-  const loadTasks = async () => {
-    try {
-      const data = await fetchTasks();
-      setTasks(data);
-    } catch (error) {
-      console.error('Error fetching tasks:', error);
-    }
-  };
 
   const handleAddTask = async (task) => {
     try {
       await addTask(task);
-      setTasks((prevTasks) => [...prevTasks, task]);
     } catch (error) {
       console.error('Error adding task:', error);
     }
@@ -34,7 +32,6 @@ function App() {
   const handleUpdateTask = async (id, updatedTask) => {
     try {
       await updateTask(id, updatedTask);
-      loadTasks();
     } catch (error) {
       console.error('Error updating task:', error);
     }
@@ -43,7 +40,6 @@ function App() {
   const handleDeleteTask = async (id) => {
     try {
       await deleteTask(id);
-      loadTasks();
     } catch (error) {
       console.error('Error deleting task:', error);
     }

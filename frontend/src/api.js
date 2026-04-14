@@ -1,5 +1,6 @@
-// API utility functions with Firebase
-const API_BASE_URL = 'https://task-manager-app-ace32-default-rtdb.firebaseio.com/tasks';
+// API utility functions with Firebase SDK
+import { ref, get, set, update, remove } from 'firebase/database';
+import { db } from './firebase';
 
 const normalizeTasks = (data) => {
   if (!data) return [];
@@ -7,33 +8,26 @@ const normalizeTasks = (data) => {
 };
 
 export const fetchTasks = async () => {
-  const response = await fetch(`${API_BASE_URL}.json`);
-  const data = await response.json();
+  const tasksRef = ref(db, 'tasks');
+  const snapshot = await get(tasksRef);
+  const data = snapshot.val();
   return normalizeTasks(data);
 };
 
 export const addTask = async (task) => {
   const taskId = Date.now().toString();
-  const response = await fetch(`${API_BASE_URL}/${taskId}.json`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(task)
-  });
-  return response.json();
+  const taskRef = ref(db, `tasks/${taskId}`);
+  await set(taskRef, task);
+  return { id: taskId, ...task };
 };
 
 export const updateTask = async (id, task) => {
-  const response = await fetch(`${API_BASE_URL}/${id}.json`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(task)
-  });
-  return response.json();
+  const taskRef = ref(db, `tasks/${id}`);
+  await update(taskRef, task);
+  return task;
 };
 
 export const deleteTask = async (id) => {
-  const response = await fetch(`${API_BASE_URL}/${id}.json`, { 
-    method: 'DELETE' 
-  });
-  return response.json();
+  const taskRef = ref(db, `tasks/${id}`);
+  await remove(taskRef);
 };
