@@ -45,7 +45,12 @@ function App() {
       console.error('Error adding task:', error);
       // Rollback on error
       setTasks(prevTasks => prevTasks.filter(t => t.id !== tempId));
-      alert('Failed to add task to database. Please try again.');
+      
+      let message = 'Failed to add task to database. Please try again.';
+      if (error.message.includes('503')) {
+        message = 'Database service is currently unavailable. Please check your Firebase configuration.';
+      }
+      alert(message);
     }
   };
 

@@ -62,7 +62,12 @@ public class FirebaseConfig {
                         .setDatabaseUrl(effectiveDatabaseUrl)
                         .build();
             } else {
-                throw new IOException("Firebase configuration not found. Please provide serviceAccountKey.json file or FIREBASE_CONFIG env var.");
+                System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                System.err.println("FIREBASE CONFIGURATION NOT FOUND!");
+                System.err.println("Please provide serviceAccountKey.json file in backend root or resources.");
+                System.err.println("Database operations will fail until this is fixed.");
+                System.err.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+                return null;
             }
         }
 

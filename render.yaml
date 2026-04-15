@@ -13,6 +13,8 @@ services:
         value: 8080
       - key: SPRING_PROFILES_ACTIVE
         value: prod
+      - key: FIREBASE_DATABASE_URL
+        value: https://task-with-spring-default-rtdb.firebaseio.com/
     autoDeploy: true
 
   - type: web

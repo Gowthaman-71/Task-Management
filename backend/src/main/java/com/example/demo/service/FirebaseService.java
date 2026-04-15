@@ -21,11 +21,17 @@ public class FirebaseService {
 
     @PostConstruct
     public void init() {
-        database = FirebaseDatabase.getInstance(firebaseApp).getReference("tasks");
+        if (firebaseApp != null) {
+            database = FirebaseDatabase.getInstance(firebaseApp).getReference("tasks");
+        } else {
+            System.err.println("Firebase Service not initialized: missing credentials.");
+        }
     }
 
     public List<Task> getAllTasks() {
         List<Task> tasks = new ArrayList<>();
+        if (database == null) return tasks;
+        
         CountDownLatch latch = new CountDownLatch(1);
 
         database.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -60,6 +66,10 @@ public class FirebaseService {
     }
 
     public Task addTask(Task task) {
+        if (database == null) {
+            System.err.println("Cannot add task: Firebase not initialized.");
+            return null;
+        }
         String clientId = task.getClientId();
 
         if (clientId != null && !clientId.isEmpty()) {
