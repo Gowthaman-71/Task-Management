@@ -11,6 +11,9 @@ function App() {
 
   useEffect(() => {
     loadTasks();
+    // Poll for updates every 10 seconds to keep dashboard in sync
+    const interval = setInterval(loadTasks, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   const loadTasks = async () => {
@@ -23,34 +26,51 @@ function App() {
   };
 
   const handleAddTask = async (task) => {
+    // Optimistic update: add task immediately to UI
+    const tempId = task.clientId || Date.now().toString();
+    const optimisticTask = { ...task, id: tempId, isOptimistic: true };
+    
+    setTasks(prevTasks => [...prevTasks, optimisticTask]);
+
     try {
       const createdTask = await addTask(task);
-      setTasks(prevTasks => {
-        if (prevTasks.some((item) => item.id === createdTask.id)) {
-          return prevTasks;
-        }
-        return [...prevTasks, createdTask];
-      });
+      // Replace optimistic task with the real one from server
+      setTasks(prevTasks => 
+        prevTasks.map(t => t.id === tempId ? createdTask : t)
+      );
     } catch (error) {
       console.error('Error adding task:', error);
+      // Rollback on error
+      setTasks(prevTasks => prevTasks.filter(t => t.id !== tempId));
+      alert('Failed to add task to database. Please try again.');
     }
   };
 
   const handleUpdateTask = async (id, updatedTask) => {
+    // Optimistic update
+    const previousTasks = [...tasks];
+    setTasks(prevTasks => prevTasks.map(task => task.id === id ? updatedTask : task));
+
     try {
       await updateTask(id, updatedTask);
-      setTasks(prevTasks => prevTasks.map(task => task.id === id ? updatedTask : task));
     } catch (error) {
       console.error('Error updating task:', error);
+      setTasks(previousTasks); // Rollback
+      alert('Failed to update task. Rolling back changes.');
     }
   };
 
   const handleDeleteTask = async (id) => {
+    // Optimistic update
+    const previousTasks = [...tasks];
+    setTasks(prevTasks => prevTasks.filter(task => task.id !== id));
+
     try {
       await deleteTask(id);
-      setTasks(prevTasks => prevTasks.filter(task => task.id !== id));
     } catch (error) {
       console.error('Error deleting task:', error);
+      setTasks(previousTasks); // Rollback
+      alert('Failed to delete task. Rolling back changes.');
     }
   };
 
