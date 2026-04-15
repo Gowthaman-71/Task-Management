@@ -1,140 +1,114 @@
 package com.example.demo.service;
 
 import com.example.demo.model.Task;
-import com.google.firebase.FirebaseApp;
-import com.google.firebase.database.*;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
+import java.util.Map;
 
 @Service
 public class FirebaseService {
 
-    @Autowired
-    private FirebaseApp firebaseApp;
+    @Value("${firebase.database-url}")
+    private String databaseUrl;
 
-    private DatabaseReference database;
+    private RestTemplate restTemplate;
 
     @PostConstruct
     public void init() {
-        if (firebaseApp != null) {
-            database = FirebaseDatabase.getInstance(firebaseApp).getReference("tasks");
-        } else {
-            System.err.println("Firebase Service not initialized: missing credentials.");
+        this.restTemplate = new RestTemplate();
+        if (!databaseUrl.endsWith("/")) {
+            databaseUrl += "/";
         }
+    }
+
+    private String getBaseUrl() {
+        return databaseUrl + "tasks.json";
+    }
+
+    private String getTaskUrl(String id) {
+        return databaseUrl + "tasks/" + id + ".json";
     }
 
     public List<Task> getAllTasks() {
-        List<Task> tasks = new ArrayList<>();
-        if (database == null) return tasks;
-        
-        CountDownLatch latch = new CountDownLatch(1);
+        try {
+            ResponseEntity<Map<String, Task>> response = restTemplate.exchange(
+                    getBaseUrl(),
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<Map<String, Task>>() {}
+            );
 
-        database.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                    Task task = snapshot.getValue(Task.class);
+            Map<String, Task> data = response.getBody();
+            List<Task> tasks = new ArrayList<>();
+            if (data != null) {
+                for (Map.Entry<String, Task> entry : data.entrySet()) {
+                    Task task = entry.getValue();
                     if (task != null) {
-                        task.setId(snapshot.getKey());
+                        task.setId(entry.getKey());
                         tasks.add(task);
                     }
                 }
-                latch.countDown();
             }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                System.err.println("Error fetching tasks: " + databaseError.getMessage());
-                latch.countDown();
-            }
-        });
-
-        try {
-            if (!latch.await(10, java.util.concurrent.TimeUnit.SECONDS)) {
-                System.err.println("Timeout waiting for Firebase response");
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+            return tasks;
+        } catch (Exception e) {
+            System.err.println("Error fetching tasks: " + e.getMessage());
+            return new ArrayList<>();
         }
-
-        return tasks;
     }
 
     public Task addTask(Task task) {
-        if (database == null) {
-            System.err.println("Cannot add task: Firebase not initialized.");
-            return null;
-        }
-        String clientId = task.getClientId();
-
-        if (clientId != null && !clientId.isEmpty()) {
-            CountDownLatch queryLatch = new CountDownLatch(1);
-            final Task[] existingTask = new Task[1];
-
-            Query query = database.orderByChild("clientId").equalTo(clientId);
-            query.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot snapshot) {
-                    for (DataSnapshot child : snapshot.getChildren()) {
-                        Task found = child.getValue(Task.class);
-                        if (found != null) {
-                            found.setId(child.getKey());
-                            existingTask[0] = found;
-                            break;
-                        }
+        try {
+            // Check for existing clientId first (optional, but consistent with previous logic)
+            String clientId = task.getClientId();
+            if (clientId != null && !clientId.isEmpty()) {
+                List<Task> allTasks = getAllTasks();
+                for (Task existing : allTasks) {
+                    if (clientId.equals(existing.getClientId())) {
+                        return existing;
                     }
-                    queryLatch.countDown();
                 }
-
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-                    System.err.println("Error checking duplicate task: " + databaseError.getMessage());
-                    queryLatch.countDown();
-                }
-            });
-
-            try {
-                if (!queryLatch.await(5, java.util.concurrent.TimeUnit.SECONDS)) {
-                    System.err.println("Timeout checking for duplicate task");
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
             }
 
-            if (existingTask[0] != null) {
-                return existingTask[0];
+            // Add the task
+            Map<String, String> response = restTemplate.postForObject(getBaseUrl(), task, Map.class);
+            if (response != null && response.containsKey("name")) {
+                String id = response.get("name");
+                task.setId(id);
+                // Firebase REST API POST doesn't include the ID in the body, so we should set it
+                restTemplate.put(getTaskUrl(id), task);
+                return task;
             }
+        } catch (Exception e) {
+            System.err.println("Error adding task: " + e.getMessage());
         }
-
-        DatabaseReference ref = database.push();
-        task.setId(ref.getKey());
-        ref.setValue(task, (databaseError, databaseReference) -> {
-            if (databaseError != null) {
-                System.err.println("Error adding task: " + databaseError.getMessage());
-            }
-        });
-        return task;
+        return null;
     }
 
     public Task updateTask(String id, Task task) {
-        database.child(id).setValue(task, (databaseError, databaseReference) -> {
-            if (databaseError != null) {
-                System.err.println("Error updating task: " + databaseError.getMessage());
-            }
-        });
-        return task;
+        try {
+            task.setId(id);
+            restTemplate.put(getTaskUrl(id), task);
+            return task;
+        } catch (Exception e) {
+            System.err.println("Error updating task: " + e.getMessage());
+            return null;
+        }
     }
 
     public void deleteTask(String id) {
-        database.child(id).removeValue((databaseError, databaseReference) -> {
-            if (databaseError != null) {
-                System.err.println("Error deleting task: " + databaseError.getMessage());
-            }
-        });
+        try {
+            restTemplate.delete(getTaskUrl(id));
+        } catch (Exception e) {
+            System.err.println("Error deleting task: " + e.getMessage());
+        }
     }
 }

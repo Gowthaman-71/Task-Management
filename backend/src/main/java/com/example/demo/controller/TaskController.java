@@ -21,7 +21,7 @@ public class TaskController {
     public Task addTask(@RequestBody Task task) {
         Task createdTask = firebaseService.addTask(task);
         if (createdTask == null) {
-            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Firebase connection is not initialized.");
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to add task to Firebase.");
         }
         return createdTask;
     }
