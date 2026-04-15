@@ -1,40 +1,29 @@
 import React, { useState } from 'react';
-import { addTask } from './api';
-
 function TaskForm({ onAdd, onClose }) {
   const [title, setTitle] = useState('');
   const [assignee, setAssignee] = useState('');
   const [priority, setPriority] = useState('Medium');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    if (isSubmitting || !title || !assignee) return;
+    if (!title || !assignee) return;
 
-    setIsSubmitting(true);
-    try {
-      const newTask = {
-        title,
-        assignee,
-        priority,
-        status: 'todo',
-        createdAt: new Date().toISOString(),
-        clientId: Date.now().toString()
-      };
+    const newTask = {
+      title,
+      assignee,
+      priority,
+      status: 'todo',
+      createdAt: new Date().toISOString(),
+      clientId: Date.now().toString()
+    };
 
-      await addTask(newTask);
-      onAdd(newTask);
+    onAdd(newTask);
 
-      setTitle('');
-      setAssignee('');
-      setPriority('Medium');
-      if (onClose) onClose();
-    } catch (error) {
-      console.error('Error adding task:', error);
-      // Optionally show error to user
-    } finally {
-      setIsSubmitting(false);
-    }
+    setTitle('');
+    setAssignee('');
+    setPriority('Medium');
+    if (onClose) onClose();
   };
 
   return (
