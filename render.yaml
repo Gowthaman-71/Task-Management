@@ -3,7 +3,7 @@ services:
     name: task-manager-backend
     env: java
     planId: free
-    repo: https://github.com/Gowthaman-71/task_management-.git
+    repo: https://github.com/Gowthaman-71/Task-Management.git
     branch: main
     rootDir: backend
     buildCommand: mvn clean package -DskipTests
@@ -19,7 +19,7 @@ services:
     name: task-manager-frontend
     env: docker
     planId: free
-    repo: https://github.com/Gowthaman-71/task_management-.git
+    repo: https://github.com/Gowthaman-71/Task-Management.git
     branch: main
     dockerfilePath: ./Dockerfile
     autoDeploy: true
