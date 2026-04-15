@@ -30,7 +30,10 @@ function App() {
     const tempId = task.clientId || Date.now().toString();
     const optimisticTask = { ...task, id: tempId, isOptimistic: true };
     
+    // 1. Update UI immediately
     setTasks(prevTasks => [...prevTasks, optimisticTask]);
+    // 2. Close form immediately
+    setShowForm(false);
 
     try {
       const createdTask = await addTask(task);

@@ -20,12 +20,14 @@ function TaskForm({ onAdd, onClose }) {
         clientId: Date.now().toString()
       };
 
-      await onAdd(newTask);
+      // Call onAdd and DON'T wait for it to finish before clearing inputs
+      // App.js handles the actual async logic with optimistic updates
+      onAdd(newTask);
 
       setTitle('');
       setAssignee('');
       setPriority('Medium');
-      if (onClose) onClose();
+      // No need to call onClose() here as handleAddTask in App.js does it immediately
     } catch (error) {
       console.error('Error adding task:', error);
     } finally {
