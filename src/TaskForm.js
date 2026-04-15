@@ -5,25 +5,32 @@ function TaskForm({ onAdd, onClose }) {
   const [priority, setPriority] = useState('Medium');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!title || !assignee) return;
+    if (isSubmitting || !title || !assignee) return;
 
-    const newTask = {
-      title,
-      assignee,
-      priority,
-      status: 'todo',
-      createdAt: new Date().toISOString(),
-      clientId: Date.now().toString()
-    };
+    setIsSubmitting(true);
+    try {
+      const newTask = {
+        title,
+        assignee,
+        priority,
+        status: 'todo',
+        createdAt: new Date().toISOString(),
+        clientId: Date.now().toString()
+      };
 
-    onAdd(newTask);
+      await onAdd(newTask);
 
-    setTitle('');
-    setAssignee('');
-    setPriority('Medium');
-    if (onClose) onClose();
+      setTitle('');
+      setAssignee('');
+      setPriority('Medium');
+      if (onClose) onClose();
+    } catch (error) {
+      console.error('Error adding task:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
