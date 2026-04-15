@@ -20,7 +20,7 @@ public class FirebaseConfig {
 
         FirebaseOptions options = new FirebaseOptions.Builder()
                 .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                .setDatabaseUrl("https://task-manager-app-ace32-default-rtdb.firebaseio.com/")
+                .setDatabaseUrl("https://task-with-spring-default-rtdb.firebaseio.com/")
                 .build();
 
         return FirebaseApp.initializeApp(options);

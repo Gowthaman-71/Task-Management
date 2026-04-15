@@ -2,6 +2,7 @@ package com.example.demo.model;
 
 public class Task {
     private String id;
+    private String clientId;
     private String title;
     private String assignee;
     private String priority;
@@ -9,8 +10,9 @@ public class Task {
 
     public Task() {}
 
-    public Task(String id, String title, String assignee, String priority, String status) {
+    public Task(String id, String clientId, String title, String assignee, String priority, String status) {
         this.id = id;
+        this.clientId = clientId;
         this.title = title;
         this.assignee = assignee;
         this.priority = priority;
@@ -24,6 +26,14 @@ public class Task {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getClientId() {
+        return clientId;
+    }
+
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
     }
 
     public String getTitle() {

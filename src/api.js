@@ -1,33 +1,35 @@
-// API utility functions with Firebase
-const API_BASE_URL = 'https://your-firebase-project.firebaseio.com/tasks.json';
+// API utility functions with backend
+const API_BASE_URL = 'http://localhost:8080/tasks';
 
 export const fetchTasks = async () => {
   const response = await fetch(API_BASE_URL);
+  if (!response.ok) throw new Error('Failed to fetch tasks');
   return response.json();
 };
 
 export const addTask = async (task) => {
-  const taskId = Date.now().toString();
-  const response = await fetch(`${API_BASE_URL}/${taskId}.json`, {
-    method: 'PUT',
+  const response = await fetch(API_BASE_URL, {
+    method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(task)
   });
+  if (!response.ok) throw new Error(`Failed to add task: ${response.status}`);
   return response.json();
 };
 
 export const updateTask = async (id, task) => {
-  const response = await fetch(`${API_BASE_URL}/${id}.json`, {
-    method: 'PATCH',
+  const response = await fetch(`${API_BASE_URL}/${id}`, {
+    method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(task)
   });
+  if (!response.ok) throw new Error(`Failed to update task: ${response.status}`);
   return response.json();
 };
 
 export const deleteTask = async (id) => {
-  const response = await fetch(`${API_BASE_URL}/${id}.json`, { 
-    method: 'DELETE' 
+  const response = await fetch(`${API_BASE_URL}/${id}`, {
+    method: 'DELETE'
   });
-  return response.json();
+  if (!response.ok) throw new Error(`Failed to delete task: ${response.status}`);
 };

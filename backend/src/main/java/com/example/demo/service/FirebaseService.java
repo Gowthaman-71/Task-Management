@@ -49,7 +49,9 @@ public class FirebaseService {
         });
 
         try {
-            latch.await();
+            if (!latch.await(10, java.util.concurrent.TimeUnit.SECONDS)) {
+                System.err.println("Timeout waiting for Firebase response");
+            }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
@@ -58,6 +60,47 @@ public class FirebaseService {
     }
 
     public Task addTask(Task task) {
+        String clientId = task.getClientId();
+
+        if (clientId != null && !clientId.isEmpty()) {
+            CountDownLatch queryLatch = new CountDownLatch(1);
+            final Task[] existingTask = new Task[1];
+
+            Query query = database.orderByChild("clientId").equalTo(clientId);
+            query.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot snapshot) {
+                    for (DataSnapshot child : snapshot.getChildren()) {
+                        Task found = child.getValue(Task.class);
+                        if (found != null) {
+                            found.setId(child.getKey());
+                            existingTask[0] = found;
+                            break;
+                        }
+                    }
+                    queryLatch.countDown();
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+                    System.err.println("Error checking duplicate task: " + databaseError.getMessage());
+                    queryLatch.countDown();
+                }
+            });
+
+            try {
+                if (!queryLatch.await(5, java.util.concurrent.TimeUnit.SECONDS)) {
+                    System.err.println("Timeout checking for duplicate task");
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+
+            if (existingTask[0] != null) {
+                return existingTask[0];
+            }
+        }
+
         DatabaseReference ref = database.push();
         task.setId(ref.getKey());
         ref.setValue(task, (databaseError, databaseReference) -> {
