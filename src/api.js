@@ -1,5 +1,5 @@
 // API utility functions with backend
-const API_BASE_URL = 'http://localhost:8080/tasks';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/tasks';
 
 export const fetchTasks = async () => {
   const response = await fetch(API_BASE_URL);
